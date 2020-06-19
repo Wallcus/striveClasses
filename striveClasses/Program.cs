@@ -86,10 +86,7 @@ namespace striveClasses
             return 248;
         }
 
-        public int Visibility
-        {
-            get; set;
-        }
+        public int visibility = 15;
 
         public bool VisibilityDebugMode
         {
@@ -106,11 +103,11 @@ namespace striveClasses
         }
         public int GetHeight()
         {
-            return (this.Visibility * 2) + 1;
+            return (this.visibility * 2) + 1;
         }
         public int GetWidth()
         {
-            return (this.Visibility * 2) + 1;
+            return (this.visibility * 2) + 1;
         }
 
         public GameMap Map
@@ -189,7 +186,6 @@ namespace striveClasses
 
         public GameRun()
         {
-            this.Visibility = 10;
             this.VisibilityDebugMode = false;
 
             //this.Map = new GameMap(this);
@@ -242,7 +238,7 @@ namespace striveClasses
             int height = this.GetHeight() + this.GetyPadding();
             int width = this.GetWidth() + this.GetxPadding();
 
-            if (this.GetHeight() > Console.LargestWindowHeight)
+            if (height > Console.LargestWindowHeight)
             {
                 height = Console.LargestWindowHeight - 1;
             }
@@ -444,10 +440,10 @@ namespace striveClasses
 
         public void Print(GameRun run, int front, int back)
         {
-            if (GameMap.GetDistance(this.X, this.Y, run.Player) < run.Visibility && run.Map.Map[this.X, this.Y, 0].VisibleToPlayer)
-            if (Math.Abs(this.X - run.Player.X) < run.Visibility && Math.Abs(this.Y - run.Player.Y) < run.Visibility)
+            if (GameMap.GetDistance(this.X, this.Y, run.Player) < run.visibility && run.Map.Map[this.X, this.Y, 0].VisibleToPlayer)
+            if (Math.Abs(this.X - run.Player.X) < run.visibility && Math.Abs(this.Y - run.Player.Y) < run.visibility)
                 {
-                Console.SetCursorPosition(this.Y - (run.Player.Y - run.Visibility), this.X - (run.Player.X - run.Visibility));
+                Console.SetCursorPosition(this.Y - (run.Player.Y - run.visibility), this.X - (run.Player.X - run.visibility));
 
                 var handle = GetStdHandle(-11);
                 int mode;
@@ -470,9 +466,9 @@ namespace striveClasses
 
         public static void Print(MapTile tile, int color, GameRun run)
         {
-            if (GameMap.GetDistance(tile.X, tile.Y, run.Player) < run.Visibility && run.Map.Map[tile.X, tile.Y, 0].VisibleToPlayer)
+            if (GameMap.GetDistance(tile.X, tile.Y, run.Player) < run.visibility && run.Map.Map[tile.X, tile.Y, 0].VisibleToPlayer)
             {
-                Console.SetCursorPosition(tile.Y - (run.Player.Y - run.Visibility), tile.X - (run.Player.X - run.Visibility));
+                Console.SetCursorPosition(tile.Y - (run.Player.Y - run.visibility), tile.X - (run.Player.X - run.visibility));
 
                 var handle = GetStdHandle(-11);
                 int mode;
@@ -495,9 +491,9 @@ namespace striveClasses
 
         public static void PrintNull(GameRun run, int x, int y)
         {
-            if (GameMap.GetDistance(x, y, run.Player) < run.Visibility)
+            if (GameMap.GetDistance(x, y, run.Player) < run.visibility)
             {
-                Console.SetCursorPosition(y - (run.Player.Y - run.Visibility), x - (run.Player.X - run.Visibility));
+                Console.SetCursorPosition(y - (run.Player.Y - run.visibility), x - (run.Player.X - run.visibility));
 
                 var handle = GetStdHandle(-11);
                 int mode;
@@ -658,8 +654,8 @@ namespace striveClasses
             {
                 //make line
                 float deg = i * Deg2rad();
-                int nx = (int)Math.Round(Math.Cos(deg) * run.Visibility) + run.Player.X;
-                int ny = (int)Math.Round(Math.Sin(deg) * run.Visibility) + run.Player.Y;
+                int nx = (int)Math.Round(Math.Cos(deg) * run.visibility) + run.Player.X;
+                int ny = (int)Math.Round(Math.Sin(deg) * run.visibility) + run.Player.Y;
 
                 int d = (int)GetDistance(nx, ny, run.Player);
 
@@ -706,9 +702,9 @@ namespace striveClasses
         {
             this.RetraceVisibility(run);
 
-            for (int i = run.Player.X - run.Visibility; i < run.Player.X + run.Visibility; i++)
+            for (int i = run.Player.X - run.visibility; i < run.Player.X + run.visibility; i++)
             {
-                for (int j = run.Player.Y - run.Visibility; j < run.Player.Y + run.Visibility; j++)
+                for (int j = run.Player.Y - run.visibility; j < run.Player.Y + run.visibility; j++)
                 {
                     //if tile is within bounds of map
                     if (i >= 0 && i < this.Xlength && j >= 0 && j < this.Ylength)
@@ -1161,8 +1157,8 @@ namespace striveClasses
 
                     this.Print(run, this.Color, run.Map.Map[this.X, this.Y, 0].ColorB);
 
-                    if(GameMap.GetDistance(run.Player, this) < run.Visibility)
-                        System.Threading.Thread.Sleep(50);
+                    if(this.VisibleToPlayer)
+                        System.Threading.Thread.Sleep(25);
                 }
             }
 
@@ -1814,7 +1810,7 @@ namespace striveClasses
         public void Turn(GameRun run)
         {
             //if player is sensing range of enemy (2*visibility)
-            if(this.DistanceFromPlayer < run.Visibility * 2)
+            if(this.DistanceFromPlayer < run.visibility * 2)
             {
                 bool canMove = true;
 
