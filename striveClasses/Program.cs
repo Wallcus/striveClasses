@@ -52,40 +52,6 @@ namespace striveClasses
 
         public int gravBootsEnergyCost = 5;
 
-        public static int GetColorBackground1()
-        {
-            return 234;
-        }
-        public static int GetColorBackground2()
-        {
-            return 237;
-        }
-        public static int GetColorPlayer()
-        {
-            return 15;
-        }
-        public static int GetColorEnemy()
-        {
-            return 210;
-        }
-        public static int GetColorSelectedBack()
-        {
-            return 156;
-        }
-        public static int GetColorSelectedFore()
-        {
-            return 22;
-        }
-        public static int GetColorFlashHit()
-        {
-            return 1;
-            //return 160;
-        }
-        public static int GetColorFlashMiss()
-        {
-            return 248;
-        }
-
         public int visibility = 15;
 
         public bool VisibilityDebugMode
@@ -1201,8 +1167,8 @@ namespace striveClasses
             this.Type = '@';
             this.Name = "Player";
 
-            this.Color = GameRun.GetColorPlayer();
-            this.ColorB = GameRun.GetColorBackground1();
+            this.Color = run.colorPlayer;
+            this.ColorB = run.colorBackground1;
 
             List<string> modeNames = new List<string>();
             List<int> modeAttacks = new List<int>();
@@ -1680,14 +1646,14 @@ namespace striveClasses
         {
             this.Type = 'E';
 
-            this.Color = GameRun.GetColorEnemy();
-            this.ColorB = GameRun.GetColorBackground1();
+            this.Color = run.colorEnemy;
+            this.ColorB = run.colorBackground1;
         }
 
         public Enemy(int x, int y, int hp, int hpMax, int energy, int energyMax, int speed, int accuracy, int dodge, bool grav, char type, GameRun run) : base(x, y, hp, hpMax, energy, energyMax, speed, accuracy, dodge, grav, type, run)
         {
-            this.Color = GameRun.GetColorEnemy();
-            this.ColorB = GameRun.GetColorBackground1();
+            this.Color = run.colorEnemy;
+            this.ColorB = run.colorBackground1;
         }
 
         public Enemy(int x, int y, int hp, int hpMax, int energy, int energyMax, int speed, int accuracy, int dodge, bool grav, char type, Weapon selected, GameRun run) : this(x, y, hp, hpMax, energy, energyMax, speed, accuracy, dodge, grav, type, run)
@@ -1716,8 +1682,8 @@ namespace striveClasses
             this.WeaponInventory[0] = new MeleeWeapon();
             this.Selected = this.WeaponInventory[0];
 
-            this.Color = GameRun.GetColorEnemy();
-            this.ColorB = GameRun.GetColorBackground1();
+            this.Color = run.colorEnemy;
+            this.ColorB = run.colorBackground1;
         }
 
         public double DistanceFromPlayer
@@ -1768,7 +1734,7 @@ namespace striveClasses
 
                 run.Log(attacking.ToString() + " dealt " + dmg + " to " + this.ToString());
 
-                this.Flash(GameRun.GetColorFlashHit(), run.Map.Map[this.X, this.Y, 0].ColorB, run);
+                this.Flash(run.colorFlashHit, run.Map.Map[this.X, this.Y, 0].ColorB, run);
 
                 if (this.HP <= 0)
                 {
