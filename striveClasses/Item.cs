@@ -13,7 +13,12 @@ namespace striveClasses
             get; set;
         }
 
-        public int Stack
+        public int StackMax
+        {
+            get; set;
+        }
+
+        public int StackCurrent
         {
             get; set;
         }
@@ -21,13 +26,13 @@ namespace striveClasses
         public Item()
         {
             this.Name = "Item";
-            this.Stack = 1;
+            this.StackMax = this.StackCurrent = 1;
         }
 
         public Item(string name, int stack)
         {
             this.Name = name;
-            this.Stack = stack;
+            this.StackMax = this.StackCurrent = 1;
         }
 
         public override string ToString()
@@ -53,6 +58,11 @@ namespace striveClasses
             get; set;
         }
 
+        public List<string> ModeAmmoType
+        {
+            get; set;
+        }
+
         public int BaseDamage
         {
             get; set;
@@ -62,6 +72,7 @@ namespace striveClasses
         {
             get; set;
         }
+
         /*
         // bleeding, piercing ...
         public string DamageType
@@ -83,6 +94,7 @@ namespace striveClasses
             //intitialize lists
             this.ModeNames = new List<string>();
             this.ModeAttacks = new List<int>();
+            this.ModeAmmoType = new List<string>();
         }
 
         public abstract void Reload(GameRun run);
@@ -103,7 +115,7 @@ namespace striveClasses
             this.Name = "Knife";
         }
 
-        public MeleeWeapon(int baseDamage, int baseAccuracy, string name) : base(baseDamage, 1, baseAccuracy)
+        public MeleeWeapon(int baseDamage, int baseAccuracy, string name) : base(baseDamage, 2, baseAccuracy)
         {
             this.ModeNames.Add("Melee");
             this.ModeAttacks.Add(1);
@@ -113,7 +125,7 @@ namespace striveClasses
 
         public override void Reload(GameRun run)
         {
-            //fix
+            //fix (or dont, melee should not be reloading, generally speaking)
             throw new NotImplementedException();
         }
     }
@@ -130,6 +142,21 @@ namespace striveClasses
             get; set;
         }
 
+        public int ClipAltMax
+        {
+            get; set;
+        }
+
+        public int ClipAltCurrent
+        {
+            get; set;
+        }
+
+        public int AltDmg
+        {
+            get; set;
+        }
+
         public RangedWeapon() : base(25, 5, 90)
         {
             this.ModeNames.Add("Semi");
@@ -137,6 +164,10 @@ namespace striveClasses
             this.SelectedMode = 0;
             this.ClipMax = 10;
             this.ClipCurrent = this.ClipMax;
+            this.ClipAltMax = 1;
+            this.ClipAltCurrent = this.ClipAltMax;
+            this.AltDmg = this.BaseDamage;
+
 
             this.Name = "Gun";
         }
@@ -148,10 +179,14 @@ namespace striveClasses
             this.SelectedMode = 0;
             this.ClipMax = clip;
             this.ClipCurrent = ClipMax;
+            this.ClipAltMax = 1;
+            this.ClipAltCurrent = this.ClipAltMax;
+            this.AltDmg = this.BaseDamage;
 
             this.Name = "Gun";
         }
 
+        //delete this constructor when ammo use is implemented. it should not be used.
         public RangedWeapon(int baseDamage, int baseRange, int baseAccuracy, List<string> modeNames, List<int> modeAttacks, int selectedMode, int clip, string name) : base(baseDamage, baseRange, baseAccuracy)
         {
             this.ModeNames = modeNames;
@@ -159,6 +194,40 @@ namespace striveClasses
             this.SelectedMode = selectedMode;
             this.ClipMax = clip;
             this.ClipCurrent = this.ClipMax;
+            this.ClipAltMax = 5;
+            this.ClipAltCurrent = this.ClipAltMax;
+            this.AltDmg = this.BaseDamage;
+
+            this.Name = name;
+        }
+
+        public RangedWeapon(int baseDamage, int baseRange, int baseAccuracy, List<string> modeNames, List<int> modeAttacks, List<string> modeAmmoTypes, int selectedMode, int clip, int clipAlt, string name) : base(baseDamage, baseRange, baseAccuracy)
+        {
+            this.ModeNames = modeNames;
+            this.ModeAttacks = modeAttacks;
+            this.ModeAmmoType = modeAmmoTypes;
+            this.SelectedMode = selectedMode;
+            this.ClipMax = clip;
+            this.ClipCurrent = this.ClipMax;
+            this.ClipAltMax = clipAlt;
+            this.ClipAltCurrent = this.ClipAltMax;
+            this.AltDmg = this.BaseDamage;
+
+            this.Name = name;
+        }
+
+        public RangedWeapon(int baseDamage, int baseRange, int baseAccuracy, List<string> modeNames, List<int> modeAttacks, List<string> modeAmmoTypes, int selectedMode, int clip, int clipAlt, int altDmg, string name) : base(baseDamage, baseRange, baseAccuracy)
+        {
+            this.ModeNames = modeNames;
+            this.ModeAttacks = modeAttacks;
+            this.ModeAmmoType = modeAmmoTypes;
+            this.SelectedMode = selectedMode;
+            this.ClipMax = clip;
+            this.ClipCurrent = this.ClipMax;
+            this.ClipAltMax = clipAlt;
+            this.ClipAltCurrent = this.ClipAltMax;
+            this.AltDmg = altDmg;
+
             this.Name = name;
         }
 
