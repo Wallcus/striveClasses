@@ -32,12 +32,42 @@ namespace striveClasses
         public Item(string name, int stack)
         {
             this.Name = name;
-            this.StackMax = this.StackCurrent = 1;
+            this.StackMax = this.StackCurrent = stack;
+        }
+
+        public Item(string name, int stack, int stackCurrent)
+        {
+            this.Name = name;
+            this.StackMax = stack;
+            this.StackCurrent = stackCurrent;
         }
 
         public override string ToString()
         {
             return this.Name;
+        }
+    }
+
+    public class Ammo : Item
+    {
+        public enum AmmoCaliber
+        {
+            Handgun = 0,
+            Intermediate = 1,
+            Heavy = 2,
+            EnergyPack = 3,
+            Shotgun = 4,
+            Explosive = 5
+        }
+
+        public string Type
+        {
+            get; set;
+        }
+
+        public Ammo(string name, int stack, int stackCurrent, int ammoCaliber) : base(name, stack, stackCurrent)
+        {
+            this.Type = ((AmmoCaliber)ammoCaliber).ToString();
         }
     }
 
