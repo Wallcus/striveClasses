@@ -88,11 +88,6 @@ namespace striveClasses
             get; set;
         }
 
-        public List<string> ModeAmmoType
-        {
-            get; set;
-        }
-
         public int BaseDamage
         {
             get; set;
@@ -124,10 +119,9 @@ namespace striveClasses
             //intitialize lists
             this.ModeNames = new List<string>();
             this.ModeAttacks = new List<int>();
-            this.ModeAmmoType = new List<string>();
         }
 
-        public abstract void Reload(GameRun run);
+        public abstract bool Reload(GameRun run, Sentient user);
     }
 
     public class MeleeWeapon : Weapon
@@ -153,7 +147,7 @@ namespace striveClasses
             this.Name = name;
         }
 
-        public override void Reload(GameRun run)
+        public override bool Reload(GameRun run, Sentient user)
         {
             //fix (or dont, melee should not be reloading, generally speaking)
             throw new NotImplementedException();
@@ -187,6 +181,21 @@ namespace striveClasses
             get; set;
         }
 
+        public string ammoTypeAltName
+        {
+            get; set;
+        }
+
+        public string AmmoTypeName
+        {
+            get; set;
+        }
+
+        public int AmmoTypeInt
+        {
+            get; set;
+        }
+
         public RangedWeapon() : base(25, 5, 90)
         {
             this.ModeNames.Add("Semi");
@@ -197,7 +206,8 @@ namespace striveClasses
             this.ClipAltMax = 1;
             this.ClipAltCurrent = this.ClipAltMax;
             this.AltDmg = this.BaseDamage;
-
+            this.AmmoTypeInt = 0;
+            this.AmmoTypeName = "Handgun";
 
             this.Name = "Gun";
         }
@@ -212,66 +222,79 @@ namespace striveClasses
             this.ClipAltMax = 1;
             this.ClipAltCurrent = this.ClipAltMax;
             this.AltDmg = this.BaseDamage;
+            this.AmmoTypeInt = 0;
+            this.AmmoTypeName = "Handgun";
 
             this.Name = "Gun";
         }
 
-        //delete this constructor when ammo use is implemented. it should not be used.
-        public RangedWeapon(int baseDamage, int baseRange, int baseAccuracy, List<string> modeNames, List<int> modeAttacks, int selectedMode, int clip, string name) : base(baseDamage, baseRange, baseAccuracy)
+        public RangedWeapon(int baseDamage, int baseRange, int baseAccuracy, List<string> modeNames, List<int> modeAttacks, string ammoTypeName, int selectedMode, int clip, string name) : base(baseDamage, baseRange, baseAccuracy)
         {
             this.ModeNames = modeNames;
             this.ModeAttacks = modeAttacks;
             this.SelectedMode = selectedMode;
             this.ClipMax = clip;
             this.ClipCurrent = this.ClipMax;
-            this.ClipAltMax = 5;
-            this.ClipAltCurrent = this.ClipAltMax;
-            this.AltDmg = this.BaseDamage;
+            this.ClipAltMax = 0;
+            this.ClipAltCurrent = 0;
+            this.AltDmg = 0;
+            this.AmmoTypeName = ammoTypeName;
+            this.ammoTypeAltName = "Empty Name";
 
             this.Name = name;
         }
 
-        public RangedWeapon(int baseDamage, int baseRange, int baseAccuracy, List<string> modeNames, List<int> modeAttacks, List<string> modeAmmoTypes, int selectedMode, int clip, int clipAlt, string name) : base(baseDamage, baseRange, baseAccuracy)
+        public RangedWeapon(int baseDamage, int baseRange, int baseAccuracy, List<string> modeNames, List<int> modeAttacks, string ammoTypeName, int selectedMode, int clip, int clipAlt, int altDmg, string ammoTypeAltName, string name) : base(baseDamage, baseRange, baseAccuracy)
         {
             this.ModeNames = modeNames;
             this.ModeAttacks = modeAttacks;
-            this.ModeAmmoType = modeAmmoTypes;
-            this.SelectedMode = selectedMode;
-            this.ClipMax = clip;
-            this.ClipCurrent = this.ClipMax;
-            this.ClipAltMax = clipAlt;
-            this.ClipAltCurrent = this.ClipAltMax;
-            this.AltDmg = this.BaseDamage;
-
-            this.Name = name;
-        }
-
-        public RangedWeapon(int baseDamage, int baseRange, int baseAccuracy, List<string> modeNames, List<int> modeAttacks, List<string> modeAmmoTypes, int selectedMode, int clip, int clipAlt, int altDmg, string name) : base(baseDamage, baseRange, baseAccuracy)
-        {
-            this.ModeNames = modeNames;
-            this.ModeAttacks = modeAttacks;
-            this.ModeAmmoType = modeAmmoTypes;
             this.SelectedMode = selectedMode;
             this.ClipMax = clip;
             this.ClipCurrent = this.ClipMax;
             this.ClipAltMax = clipAlt;
             this.ClipAltCurrent = this.ClipAltMax;
             this.AltDmg = altDmg;
+            this.AmmoTypeName = ammoTypeName;
+            this.ammoTypeAltName = ammoTypeAltName;
 
             this.Name = name;
         }
 
-        public RangedWeapon(RangedWeapon weapon) : this(weapon.BaseDamage, weapon.BaseRange, weapon.BaseAccuracy, weapon.ModeNames, weapon.ModeAttacks, weapon.SelectedMode, weapon.ClipMax, weapon.Name)
+        public RangedWeapon(RangedWeapon weapon) : this(weapon.BaseDamage, weapon.BaseRange, weapon.BaseAccuracy, weapon.ModeNames, weapon.ModeAttacks, weapon.AmmoTypeName, weapon.SelectedMode, weapon.ClipMax, weapon.ClipAltMax, weapon.AltDmg, weapon.ammoTypeAltName, weapon.Name)
         {
             this.ClipCurrent = weapon.ClipCurrent;
+            this.ClipAltCurrent = weapon.ClipAltCurrent;
         }
 
-        public override void Reload(GameRun run)
+        public override bool Reload(GameRun run, Sentient user)
         {
-            //fix to check inventory for ammo
-            this.ClipCurrent = this.ClipMax;
+            bool hasReloaded = false;
+
+            for(int i = 0; i < user.ItemInventory.Count(); i++)
+            {
+                if(this.ClipCurrent < this.ClipMax && user.ItemInventory[i] is Ammo && ((Ammo)(user.ItemInventory[i])).Type == this.AmmoTypeName)
+                {
+                    if(this.ClipMax - this.ClipCurrent <= ((Ammo)(user.ItemInventory[i])).StackCurrent)
+                    {
+                        ((Ammo)(user.ItemInventory[i])).StackCurrent -= this.ClipMax - this.ClipCurrent;
+                        this.ClipCurrent = this.ClipMax;
+
+                        hasReloaded = true;
+                    }
+                    else if(((Ammo)(user.ItemInventory[i])).StackCurrent > 0)
+                    {
+                        this.ClipCurrent += ((Ammo)(user.ItemInventory[i])).StackCurrent;
+                        ((Ammo)(user.ItemInventory[i])).StackCurrent = 0;
+                        user.ItemInventory.Remove(((Ammo)(user.ItemInventory[i])));
+
+                        hasReloaded = true;
+                    }
+                }
+            }
 
             Sentient.UpdateAmmo(run, this);
+
+            return hasReloaded;
         }
     }
 }

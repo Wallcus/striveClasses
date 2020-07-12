@@ -2225,8 +2225,11 @@ namespace striveClasses
 
             this.WeaponInventory.Add(new MeleeWeapon(75, 100, "Blade"));
             this.WeaponInventory.Add(new RangedWeapon());
-            this.WeaponInventory.Add(new RangedWeapon(50, 10, 90, modeNames, modeAttacks, 1, 30, "AR"));
+            this.WeaponInventory.Add(new RangedWeapon(50, 10, 90, modeNames, modeAttacks, "Intermediate", 1, 30, 5, 75, "Explosive", "AR"));
             this.Selected = this.WeaponInventory[2];
+
+            this.ItemInventory.Add(new Ammo("Handgun", 100, 70, 0));
+            this.ItemInventory.Add(new Ammo("Intermediate", 200, 17, 1));
         }
 
         public Player(int x, int y, int hpMax, int energyMax, int speed, int accuracy, int dodge, GameRun run) : base(x, y, hpMax, energyMax, speed, accuracy, dodge, run)
@@ -2730,10 +2733,8 @@ namespace striveClasses
                         {
                             RangedWeapon temp = new RangedWeapon((RangedWeapon)run.Player.Selected);
 
-                            if(temp.ClipCurrent < temp.ClipMax)
+                            if(run.Player.Selected.Reload(run, run.Player))
                             {
-                                run.Player.Selected.Reload(run);
-
                                 validAction = true;
                                 endingAction = true;
                             }
@@ -3143,7 +3144,7 @@ namespace striveClasses
                     if (this.Selected is RangedWeapon)
                     {
                         if (this.Attack(run.Player, (RangedWeapon)this.Selected, run) == false)
-                            this.Selected.Reload(run);
+                            this.Selected.Reload(run, this);
                     }
                     else if (this.Selected is MeleeWeapon)
                     {
@@ -3170,7 +3171,7 @@ namespace striveClasses
                             if (this.Selected is RangedWeapon)
                             {
                                 if (this.Attack(run.Player, (RangedWeapon)this.Selected, run) == false)
-                                    this.Selected.Reload(run);
+                                    this.Selected.Reload(run, this);
                             }
                             else if (this.Selected is MeleeWeapon)
                             {
