@@ -666,6 +666,296 @@ namespace striveClasses
         }
     }
 
+    public class WireWall : MapWall
+    {
+        public WireWall(int x, int y, char c, int front, int back) : base(x, y, c, front, back)
+        {
+
+        }
+    }
+
+    public class ExposedWireWall : WireWall
+    {
+        int Energy
+        {
+            get; set;
+        }
+
+        public ExposedWireWall(int x, int y, char c, int front, int back) : base(x, y, c, front, back)
+        {
+            Random rnd = new Random();
+
+            this.Energy = rnd.Next(50, 100);
+        }
+
+        public ExposedWireWall(int x, int y, char c, int front, int back, int energy) : base(x, y, c, front, back)
+        {
+            this.Energy = energy;
+        }
+
+        public void GetEnergy(GameRun run, Sentient user)
+        {
+            if (user.Energy + this.Energy >= user.EnergyMax)
+                user.Energy = user.EnergyMax;
+            else
+                user.Energy += this.Energy;
+        }
+    }
+
+    public abstract class InteractableMapTile : MapTile
+    {
+        public List<Item> Inventory
+        {
+            get; set;
+        }
+
+        public int Energy
+        {
+            get; set;
+        }
+
+        //implement drop table/random drops
+
+        public abstract void OnInteraction(GameRun run, Sentient interacting);
+
+        public InteractableMapTile(int x, int y, char c, int front, int back) : base(x, y, c, front, back)
+        {
+            Random rnd = new Random();
+
+            this.Energy = rnd.Next(50, 100);
+        }
+
+        public InteractableMapTile(int x, int y, char c, int front, int back, int energy) : base(x,y,c,front,back)
+        {
+            this.Energy = energy;
+        }
+
+        public InteractableMapTile(int x, int y, char c, int front, int back, List<Item> inventory) : base(x, y, c, front, back)
+        {
+            this.Inventory = inventory;
+            this.Energy = 0;
+
+        }
+
+        public InteractableMapTile(int x, int y, char c, int front, int back, int energy, List<Item> inventory) : base(x, y, c, front, back)
+        {
+            this.Energy = energy;
+            this.Inventory = inventory;
+        }
+    }
+
+    public class InteractableMapFloor : InteractableMapTile
+    {
+        public InteractableMapFloor(int x, int y, char c, int front, int back) : base(x, y, c, front, back)
+        {
+
+        }
+
+        public InteractableMapFloor(int x, int y, char c, int front, int back, int energy) : base(x, y, c, front, back, energy)
+        {
+
+        }
+
+        public InteractableMapFloor(int x, int y, char c, int front, int back, List<Item> inventory) : base(x, y, c, front, back, inventory)
+        {
+
+        }
+
+        public InteractableMapFloor(int x, int y, char c, int front, int back, int energy, List<Item> inventory) : base(x, y, c, front, back, energy, inventory)
+        {
+
+        }
+
+        public override void OnInteraction(GameRun run, Sentient interacting)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class InteractableMapObject : InteractableMapTile
+    {
+        public InteractableMapObject(int x, int y, char c, int front, int back) :  base(x, y, c, front, back)
+        {
+
+        }
+
+        public InteractableMapObject(int x, int y, char c, int front, int back, int energy) : base(x, y, c, front, back, energy)
+        {
+
+        }
+
+        public InteractableMapObject(int x, int y, char c, int front, int back, List<Item> inventory) : base(x, y, c, front, back, inventory)
+        {
+
+        }
+
+        public InteractableMapObject(int x, int y, char c, int front, int back, int energy, List<Item> inventory) : base(x, y, c, front, back, energy, inventory)
+        {
+
+        }
+
+        public override void OnInteraction(GameRun run, Sentient interacting)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    
+    public class HealingStation : InteractableMapObject
+    {
+        
+
+        public HealingStation(int x, int y, int front, int back, int energy) : base(x, y, 'H', front, back, energy)
+        {
+
+        }
+
+        public HealingStation(int x, int y, int front, int back) : base(x, y, 'H', front, back)
+        {
+            Random rnd = new Random();
+            this.Energy = rnd.Next(50, 100);
+        }
+
+        public override void OnInteraction(GameRun run, Sentient interacting)
+        {
+            if(this.Energy > 0 && interacting.HP < interacting.HPMax)
+            {
+                int temp = interacting.HP;
+
+                interacting.HP += this.Energy;
+
+                if (interacting.HP > interacting.HPMax)
+                    interacting.HP = interacting.HPMax;
+
+                if (interacting is Player)
+                {
+                    ((Player)interacting).UpdateHP(run);
+                    run.Log("Healed player for " + (interacting.HP - temp));
+                }
+
+                this.Color = run.colorFlashMiss;
+
+                this.Energy = 0;
+            }
+        }
+    }
+
+    public abstract class MapDoor : InteractableMapTile
+    {
+        public bool IsOpen
+        {
+            get; set;
+        }
+
+        public char OpenChar
+        {
+            get; set;
+        }
+
+        public char ClosedChar
+        {
+            get; set;
+        }
+
+        public MapDoor(int x, int y, char c, int front, int back, bool isOpen) : base(x, y, c, front, back) 
+        {
+            
+            this.OpenChar = '_';
+            this.ClosedChar = 'X';
+
+            this.IsOpen = isOpen;
+
+            if (IsOpen)
+            {
+                this.Type = this.OpenChar;
+            }
+            else
+            {
+                this.Type = this.ClosedChar;
+            }
+            
+        }
+
+        //public abstract void OnInteraction(GameRun run, Sentient s);
+    }
+
+    public class MapDoorVertical : MapDoor
+    {
+        public MapDoorVertical(int x, int y, char c, int front, int back, bool isOpen) : base(x, y, c, front, back, isOpen)
+        {
+
+        }
+
+        public override void OnInteraction(GameRun run, Sentient s)
+        {
+            //implement
+            this.IsOpen = !this.IsOpen;
+
+            if(this.IsOpen)
+            {
+                this.Type = this.OpenChar;
+                run.Map.Map[this.X, this.Y, 1] = null;
+                run.Map.Map[this.X, this.Y, 0].Print(run);
+            }
+            else
+            {
+                this.Type = this.ClosedChar;
+                run.Map.Map[this.X, this.Y, 1] = new MapWall(this.X, this.Y, this.Type, this.Color, this.ColorB);
+                run.Map.Map[this.X, this.Y, 1].Print(run);
+            }
+
+            run.Map.Print(run);
+        }
+    }
+
+    public class MapDoorHorizontal : MapDoor
+    {
+        public MapDoorHorizontal(int x, int y, char c, int front, int back, bool isOpen) : base(x, y, c, front, back, isOpen)
+        {
+
+        }
+
+        public override void OnInteraction(GameRun run, Sentient s)
+        {
+            //implement
+            this.IsOpen = !this.IsOpen;
+
+            if (this.IsOpen)
+            {
+                this.Type = this.OpenChar;
+                run.Map.Map[this.X, this.Y, 1] = null;
+                run.Map.Map[this.X, this.Y, 0].Print(run);
+            }
+            else
+            {
+                this.Type = this.ClosedChar;
+                run.Map.Map[this.X, this.Y, 1] = new MapWall(this.X, this.Y, this.Type, this.Color, this.ColorB);
+                run.Map.Map[this.X, this.Y, 1].Print(run);
+            }
+
+            run.Map.Print(run);
+        }
+    }
+
+    public class FloorExit : InteractableMapFloor
+    {
+        public FloorExit(int x, int y, int front, int back) : base(x, y, '#', front, back)
+        {
+
+        }
+
+        public override void OnInteraction(GameRun run, Sentient interacting)
+        {
+            //implenment switching to next level run.SwitchLevel();
+
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.SetCursorPosition((run.GetHeight() / 2) - (("LEVEL").Length / 2), run.GetWidth() / 2);
+            Console.WriteLine("LEVEL");
+            Console.SetCursorPosition((run.GetHeight() / 2) - (("COMPLETE").Length / 2), run.GetWidth() / 2 + 1);
+            Console.WriteLine("COMPLETE");
+            Console.ReadKey(true);
+        }
+    }
+
     public class GameMap
     {
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -815,13 +1105,40 @@ namespace striveClasses
 
         public void PickUpItem(GameRun run, Sentient s, Item item)
         {
-            if (run.Map.ItemMap[s.X, s.Y].IndexOf(item) > -1)
+            bool added = false;
+
+            for(int i = 0; i < s.ItemInventory.Count(); i++)
             {
-                s.ItemInventory.Add(item);
-                run.Map.ItemMap[s.X, s.Y].Remove(item);
+                if(s.ItemInventory[i].Name == item.Name && s.ItemInventory[i].StackCurrent < s.ItemInventory[i].StackMax && s.ItemInventory[i].StackCurrent > 0)
+                {
+                    if(item.StackCurrent <= (s.ItemInventory[i].StackMax - s.ItemInventory[i].StackCurrent))
+                    {
+                        s.ItemInventory[i].StackCurrent += item.StackCurrent;
+                        run.Map.ItemMap[s.X, s.Y].Remove(item);
+                        added = true;
+                    }
+                    else
+                    {
+                        int tempDif = s.ItemInventory[i].StackMax - s.ItemInventory[i].StackCurrent;
+                        s.ItemInventory[i].StackCurrent = s.ItemInventory[i].StackMax;
+                        item.StackCurrent -= tempDif;
+
+                        if(item.StackCurrent <= 0)
+                            run.Map.ItemMap[s.X, s.Y].Remove(item);
+                        added = true;
+                    }
+                }
+                else
+                {
+                    if(added == false)
+                    {
+                        s.ItemInventory.Add(item);
+                        run.Map.ItemMap[s.X, s.Y].Remove(item);
+                    }
+                }
             }
         }
-
+        
         public void PickUpItem(GameRun run, Sentient s, Weapon item)
         {
             //if weapon inventory is not full, add item
@@ -906,6 +1223,33 @@ namespace striveClasses
                         case '|': m.Map[i, j, 0] = new MapFloor(i, j, ' ', run.colorWall, colorB); m.Map[i, j, 1] = new MapWall(i, j, '|', run.colorWall, colorB); break;
                         case '@': m.Map[i, j, 0] = new MapFloor(i, j, ' ', run.colorWall, colorB); Player temp = new Player(run); temp.X = i; temp.Y = j; m.Map[i, j, 1] = temp; run.Player = temp;  break;
                         case 'E': m.Map[i, j, 0] = new MapFloor(i, j, ' ', run.colorWall, colorB); Enemy tempEnemy = new Enemy(i, j, run); m.Map[i, j, 1] = tempEnemy; run.Enemies.Add(tempEnemy); break;
+                        case '#': m.Map[i, j, 0] = new FloorExit(i, j, run.colorWall, colorB); break;
+                        case 'X':   if (m.Map[i, j - 1, 0] is MapWall)
+                                    {
+                                        m.Map[i, j, 0] = new MapDoorHorizontal(i, j, 'X', run.colorWall, colorB, false);
+                                        m.Map[i, j, 1] = new MapWall(i, j, 'X', run.colorWall, colorB);
+                                    }
+                                    else
+                                    {
+                                        m.Map[i, j, 0] = new MapDoorVertical(i, j, 'X', run.colorWall, colorB, false);
+                                        m.Map[i, j, 1] = new MapWall(i, j, 'X', run.colorWall, colorB);
+                                    }
+
+                                    break;
+
+                        case '_':   if (m.Map[i, j - 1, 0] is MapWall)
+                                    {
+                                        m.Map[i, j, 0] = new MapDoorHorizontal(i, j, '_', run.colorWall, colorB, true);
+                                        m.Map[i, j, 1] = null;
+                                    }
+                                    else
+                                    {
+                                        m.Map[i, j, 0] = new MapDoorVertical(i, j, '_', run.colorWall, colorB, true);
+                                        m.Map[i, j, 1] = null;
+                                    }
+
+                                    break;
+                        case 'H': m.Map[i, j, 0] = new HealingStation(i, j, run.colorSelectedBack, run.colorBackground1); m.Map[i, j, 1] = null; break;
                     }
                 }
             }
@@ -976,11 +1320,11 @@ namespace striveClasses
                 }
             }
             
-            for (int i = 0; i < Map.GetLength(0); i++)
+            for (int i = run.Player.X - run.visibility; i < run.Player.X + run.visibility; i++)
             {
-                for (int j = 0; j < Map.GetLength(1); j++)
+                for (int j = run.Player.Y - run.visibility; j < run.Player.Y + run.visibility; j++)
                 {
-                    if(run.Map.Map[i, j, 1] != null && run.Map.Map[i, j, 1] is MapWall)
+                    if(i > 0 && j > 0 && i < run.Map.Xlength && j < run.Map.Ylength && run.Map.Map[i, j, 1] != null && run.Map.Map[i, j, 1] is MapWall && !(run.Map.Map[i, j, 1] is SolidWall))
                     {
                         int count = 0;
 
@@ -1091,7 +1435,7 @@ namespace striveClasses
                             }
                         }
                     }
-                    else
+                    else //if (!(run.Map.Map[i, j, 1] is SolidWall))
                     {
                         int count = 0;
 
@@ -1702,6 +2046,11 @@ namespace striveClasses
 
     public abstract class Sentient : MapTile
     {
+        public char Facing
+        {
+            get; set;
+        }
+
         //stats (current)
         public int HP
         {
@@ -1780,6 +2129,8 @@ namespace striveClasses
 
             this.Name = "sentientName";
 
+            this.Facing = 'S';
+
             /*
             this.WeaponInventory.Add(new MeleeWeapon());
             this.Selected = this.WeaponInventory[0];
@@ -1801,10 +2152,8 @@ namespace striveClasses
             this.ItemInventory = new List<Item>();
             this.WeaponInventory = new List<Weapon>();
             this.Name = "sentientName";
-            /*
-            this.WeaponInventory.Add(new MeleeWeapon());
-            this.Selected = this.WeaponInventory[0];
-            */
+
+            this.Facing = 'S';
         }
 
         public Sentient(int x, int y, int hp, int hpMax, int energy, int energyMax, int speed, int accuracy, int dodge, bool grav, char type, GameRun run) : base(x, y, type, run.colorEnemy, run.colorBackground1)
@@ -1820,10 +2169,8 @@ namespace striveClasses
             this.ItemInventory = new List<Item>();
             this.WeaponInventory = new List<Weapon>();
             this.Name = "sentientName";
-            /*
-            this.WeaponInventory.Add(new MeleeWeapon());
-            this.Selected = this.WeaponInventory[0];
-            */
+
+            this.Facing = 'S';
         }
 
         public override string ToString()
@@ -1962,9 +2309,7 @@ namespace striveClasses
 
                     this.Move(run, step);
                 }
-
-                //retrace visibility, but like, wonky shit ya know what i mean, starting from tile X/Y
-
+                
                 GameMap.RetraceAoE(run, tile, radius, weapon.AltDmg, this, "damage");
 
                 //use bullet hit or miss
@@ -2158,6 +2503,28 @@ namespace striveClasses
 
                     this.ColorB = run.Map.Map[this.X, this.Y, 0].ColorB;
 
+                    if(path[i, 0] == 1)
+                    {
+                        this.Facing = 'S';
+                    }
+                    else if(path[i, 0] == -1)
+                    {
+                        this.Facing = 'N';
+                    }
+                    else if (path[i, 1] == 1)
+                    {
+                        this.Facing = 'E';
+                    }
+                    else if (path[i, 1] == -1)
+                    {
+                        this.Facing = 'W';
+                    }
+                    else
+                    {
+                        // this.Facing remains unchanged
+                    }
+
+
                     this.Print(run, this.Color, run.Map.Map[this.X, this.Y, 0].ColorB);
 
                     if(this.VisibleToPlayer)
@@ -2178,7 +2545,9 @@ namespace striveClasses
 
                 if (run.Player.Selected.ModeNames[run.Player.Selected.SelectedMode] == "AoE")
                 {
-                    GameMap.RetraceAoE(run, run.SelectedTarget, run.Player.Selected.ModeAttacks[run.Player.Selected.SelectedMode], 0, run.Player, "draw");
+                    if (run.SelectedTarget != null)
+                        GameMap.RetraceAoE(run, run.SelectedTarget, run.Player.Selected.ModeAttacks[run.Player.Selected.SelectedMode], 0, run.Player, "draw");
+
                 }
                 else if (run.LastAttacked != null && run.LastAttacked.HP > 0)
                 {
@@ -2479,6 +2848,8 @@ namespace striveClasses
                                 run.Log("Out of energy.");
                             }
                         }
+                        else
+                            run.Player.Facing = 'W';
                     }
                     //move up
                     else if (key == ConsoleKey.W)
@@ -2523,6 +2894,8 @@ namespace striveClasses
                                 run.Log("Out of energy.");
                             }
                         }
+                        else
+                            run.Player.Facing = 'N';
                     }
                     //move right
                     else if (key == ConsoleKey.D)
@@ -2567,6 +2940,8 @@ namespace striveClasses
                                 run.Log("Out of energy.");
                             }
                         }
+                        else
+                            run.Player.Facing = 'E';
                     }
                     //move down
                     else if (key == ConsoleKey.S)
@@ -2611,6 +2986,49 @@ namespace striveClasses
                                 run.Log("Out of energy.");
                             }
                         }
+                        else
+                            run.Player.Facing = 'S';
+                    }
+                    else if(key == ConsoleKey.Spacebar)
+                    {
+                        if(run.Map.Map[run.Player.X, run.Player.Y, 0] is InteractableMapTile && !(run.Map.Map[run.Player.X, run.Player.Y, 0] is MapDoor))
+                        {
+                            ((InteractableMapTile)run.Map.Map[run.Player.X, run.Player.Y, 0]).OnInteraction(run, run.Player);
+                        }
+                        else if(run.Map.Map[run.Player.X, run.Player.Y - 1, 0] is InteractableMapTile && run.Player.Facing == 'W')
+                        {
+                            ((InteractableMapTile)run.Map.Map[run.Player.X, run.Player.Y - 1, 0]).OnInteraction(run, run.Player);
+                        }
+                        else if (run.Map.Map[run.Player.X, run.Player.Y + 1, 0] is InteractableMapTile && run.Player.Facing == 'E')
+                        {
+                            ((InteractableMapTile)run.Map.Map[run.Player.X, run.Player.Y + 1, 0]).OnInteraction(run, run.Player);
+                        }
+                        else if (run.Map.Map[run.Player.X - 1, run.Player.Y, 0] is InteractableMapTile && run.Player.Facing == 'N')
+                        {
+                            ((InteractableMapTile)run.Map.Map[run.Player.X - 1, run.Player.Y, 0]).OnInteraction(run, run.Player);
+                        }
+                        else if (run.Map.Map[run.Player.X + 1, run.Player.Y, 0] is InteractableMapTile && run.Player.Facing == 'S')
+                        {
+                            ((InteractableMapTile)run.Map.Map[run.Player.X + 1, run.Player.Y, 0]).OnInteraction(run, run.Player);
+                        }
+
+                    }
+                    //change facing direction withoug moving
+                    else if(key == ConsoleKey.NumPad8)
+                    {
+                        run.Player.Facing = 'N';
+                    }
+                    else if (key == ConsoleKey.NumPad2)
+                    {
+                        run.Player.Facing = 'S';
+                    }
+                    else if (key == ConsoleKey.NumPad4)
+                    {
+                        run.Player.Facing = 'W';
+                    }
+                    else if (key == ConsoleKey.NumPad6)
+                    {
+                        run.Player.Facing = 'E';
                     }
                     //for debugging purposes, toggle gravity
                     else if (key == ConsoleKey.H)
@@ -2675,11 +3093,11 @@ namespace striveClasses
                                 //attack aoe
                             if(run.Player.Selected.ModeNames[run.Player.Selected.SelectedMode] == "AoE") //also checks that selected is RangedWeapon, as MeleeWeapon should not have AoE
                             {
-                                if (run.SelectedTile != null)
+                                if (run.SelectedTile != null && GameMap.GetDistance(run.SelectedTile.X, run.SelectedTile.Y, run.Player) < run.Player.Selected.BaseRange)
                                 {
                                     validAction = run.Player.Attack(run.SelectedTile, (RangedWeapon)run.Player.Selected, run);
                                 }
-                                else if (run.SelectedTarget != null)
+                                else if (run.SelectedTarget != null && run.SelectedTarget.DistanceFromPlayer < run.Player.Selected.BaseRange)
                                 {
                                     validAction = run.Player.Attack((MapTile)run.SelectedTarget, (RangedWeapon)run.Player.Selected, run);
                                 }
@@ -3144,7 +3562,34 @@ namespace striveClasses
                     if (this.Selected is RangedWeapon)
                     {
                         if (this.Attack(run.Player, (RangedWeapon)this.Selected, run) == false)
-                            this.Selected.Reload(run, this);
+                        {
+                            if (!this.Selected.Reload(run, this))
+                            {
+                                bool temp = false;
+
+                                foreach(Ammo ammo in this.ItemInventory)
+                                {
+                                    temp = true;
+                                    break;
+                                }
+
+                                if(temp)
+                                {
+                                    this.Selected = this.WeaponInventory[(this.WeaponInventory.IndexOf(this.Selected) + 1) % this.WeaponInventory.Count()];
+                                }
+                                else
+                                {
+                                    //temp is false
+                                    foreach(MeleeWeapon melee in this.WeaponInventory)
+                                    {
+                                        temp = true;
+                                        this.Selected = melee;
+                                        break;
+                                    }
+                                }
+                                
+                            }
+                        }
                     }
                     else if (this.Selected is MeleeWeapon)
                     {
