@@ -252,7 +252,8 @@ namespace striveClasses
             }
 
             //select closest enemy
-            this.SelectEnemy(this.GetClosestEnemy());
+            if(this.GetClosestEnemy().VisibleToPlayer)
+                this.SelectEnemy(this.GetClosestEnemy());
 
             while (this.Player.HP > 0)
             {
@@ -278,14 +279,16 @@ namespace striveClasses
                         else
                             break;
                     }
-                    if(this.LastAttacked != null && this.LastAttacked.HP > 0 && this.Map.Map[LastAttacked.X, LastAttacked.Y, 0].VisibleToPlayer)
+                    /*
+                    if(this.LastAttacked != null && this.LastAttacked.HP > 0 && this.LastAttacked.VisibleToPlayer)
                     {
                         this.SelectEnemy(this.LastAttacked);
                     }
-                    else if (this.Enemies.Count > 0)
+                    else if (this.Enemies.Count > 0 && this.GetClosestEnemy().VisibleToPlayer)
                     {
                         this.SelectEnemy(this.GetClosestEnemy());
                     }
+                    */
                 }
             }
         }
@@ -307,11 +310,10 @@ namespace striveClasses
 
             this.UnselectEnemy(this.SelectedTarget);
             this.SelectedTarget = enemy;
-            /*
+
             if (this.Player.Selected.ModeNames[this.Player.Selected.SelectedMode] == "AoE")
-                this.Map.Print(this);
-*/
-            if (enemy.DistanceFromPlayer < this.Player.Selected.BaseRange)
+                GameMap.RetraceAoE(this, enemy, this.Player.Selected.ModeAttacks[this.Player.Selected.SelectedMode], this.Player.Selected.BaseDamage, this.Player, "draw");
+            else if (enemy.DistanceFromPlayer < this.Player.Selected.BaseRange)
                 enemy.Print(this, this.colorSelectedFore, this.colorSelectedBack);
             else
                 enemy.Print(this, this.colorSelectedBack, this.colorSelectedFore);
@@ -422,7 +424,7 @@ namespace striveClasses
                     SwitchTarget(x + (x / Math.Abs(x)), run, ref isFinal);
                     isFinal = false;
                 }
-
+                
                 if(isFinal && run.Player.Selected.ModeNames[run.Player.Selected.SelectedMode] == "AoE")
                 {
                     run.Map.Print(run);
@@ -894,16 +896,27 @@ namespace striveClasses
             {
                 this.Type = this.OpenChar;
                 run.Map.Map[this.X, this.Y, 1] = null;
-                run.Map.Map[this.X, this.Y, 0].Print(run);
+                //run.Map.Map[this.X, this.Y, 0].Print(run);
+
+                run.Map.Print(run);
+
+                if (run.LastAttacked != null && run.LastAttacked.HP > 0)
+                {
+                    run.SelectEnemy(run.LastAttacked);
+                }
+                else if (run.GetClosestEnemy().VisibleToPlayer)
+                {
+                    run.SelectEnemy(run.GetClosestEnemy());
+                }
             }
             else
             {
                 this.Type = this.ClosedChar;
                 run.Map.Map[this.X, this.Y, 1] = new MapWall(this.X, this.Y, this.Type, this.Color, this.ColorB);
-                run.Map.Map[this.X, this.Y, 1].Print(run);
-            }
+                //run.Map.Map[this.X, this.Y, 1].Print(run);
 
-            run.Map.Print(run);
+                run.Map.Print(run);
+            }
         }
     }
 
@@ -923,16 +936,27 @@ namespace striveClasses
             {
                 this.Type = this.OpenChar;
                 run.Map.Map[this.X, this.Y, 1] = null;
-                run.Map.Map[this.X, this.Y, 0].Print(run);
+                //run.Map.Map[this.X, this.Y, 0].Print(run);
+
+                run.Map.Print(run);
+
+                if (run.LastAttacked != null && run.LastAttacked.HP > 0)
+                {
+                    run.SelectEnemy(run.LastAttacked);
+                }
+                else if (run.GetClosestEnemy().VisibleToPlayer)
+                {
+                    run.SelectEnemy(run.GetClosestEnemy());
+                }
             }
             else
             {
                 this.Type = this.ClosedChar;
                 run.Map.Map[this.X, this.Y, 1] = new MapWall(this.X, this.Y, this.Type, this.Color, this.ColorB);
-                run.Map.Map[this.X, this.Y, 1].Print(run);
-            }
+                //run.Map.Map[this.X, this.Y, 1].Print(run);
 
-            run.Map.Print(run);
+                run.Map.Print(run);
+            }
         }
     }
 
@@ -947,7 +971,7 @@ namespace striveClasses
         {
             //implenment switching to next level run.SwitchLevel();
 
-            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.SetCursorPosition((run.GetHeight() / 2) - (("LEVEL").Length / 2), run.GetWidth() / 2);
             Console.WriteLine("LEVEL");
             Console.SetCursorPosition((run.GetHeight() / 2) - (("COMPLETE").Length / 2), run.GetWidth() / 2 + 1);
@@ -1583,7 +1607,7 @@ namespace striveClasses
         {
             //mode : "Draw"
             //mode : "Damage"
-
+            /*
             if (run.Map.Map[target.X, target.Y, 1] != null && run.Map.Map[target.X, target.Y, 1] is MapWall)
             {
                 double shortestDistance = GameMap.GetDistance(target.X, target.Y, attacking);
@@ -1625,7 +1649,7 @@ namespace striveClasses
                 if(radius > 0)
                     RetraceAoE(run, closest, radius - 1, dmg, attacking, mode);
             }
-            else
+            else*/
             {
                 bool inRange = GameMap.GetDistance(target.X, target.Y, attacking) < attacking.Selected.BaseRange;
 
@@ -1651,7 +1675,7 @@ namespace striveClasses
                             if (run.Map.Map[target.X, target.Y, 1] is Sentient)
                             {
                                 run.Map.Map[target.X, target.Y, 1].Print(run, run.colorSelectedFore, run.colorFlashAoE);
-                                ((Sentient)run.Map.Map[target.X, target.Y, 1]).TakeDamageWithoutFlashing((int)((double)dmg * (1.5 / (double)radius)), attacking, run);
+                                ((Sentient)run.Map.Map[target.X, target.Y, 1]).TakeDamageWithoutFlashing((int)((double)dmg), attacking, run);
                             }
                             else
                                 run.Map.Map[target.X, target.Y, 1].Print(run, run.Map.Map[target.X, target.Y, 1].Color, run.colorFlashAoE);
@@ -1714,7 +1738,7 @@ namespace striveClasses
                                             if (run.Map.Map[target.X + i, target.Y + j, 1] is Sentient)
                                             {
                                                 run.Map.Map[target.X + i, target.Y + j, 1].Print(run, run.colorSelectedFore, run.colorFlashAoE);
-                                                ((Sentient)run.Map.Map[target.X + i, target.Y + j, 1]).TakeDamageWithoutFlashing((int)((double)dmg * ((GameMap.GetDistance(target.X + i, target.Y + j, target.X, target.Y) + 1) / (double)radius)), attacking, run);
+                                                ((Sentient)run.Map.Map[target.X + i, target.Y + j, 1]).TakeDamageWithoutFlashing((int)((double)dmg * ((double)radius) / (GameMap.GetDistance(target.X + i, target.Y + j, target.X, target.Y) + 5)), attacking, run);
                                             }
                                             else
                                                 run.Map.Map[target.X + i, target.Y + j, 1].Print(run, run.Map.Map[target.X + i, target.Y + j, 1].Color, run.colorFlashAoE);
@@ -1773,7 +1797,7 @@ namespace striveClasses
                                             if (run.Map.Map[target.X + i, target.Y - j, 1] is Sentient)
                                             {
                                                 run.Map.Map[target.X + i, target.Y - j, 1].Print(run, run.colorSelectedFore, run.colorFlashAoE);
-                                                ((Sentient)run.Map.Map[target.X + i, target.Y - j, 1]).TakeDamageWithoutFlashing((int)((double)dmg * ((GameMap.GetDistance(target.X + i, target.Y - j, target.X, target.Y) + 1) / (double)radius)), attacking, run);
+                                                ((Sentient)run.Map.Map[target.X + i, target.Y - j, 1]).TakeDamageWithoutFlashing((int)((double)dmg * ((double)radius) / (GameMap.GetDistance(target.X + i, target.Y - j, target.X, target.Y) + 5)), attacking, run);
                                             }
                                             else
                                                 run.Map.Map[target.X + i, target.Y - j, 1].Print(run, run.Map.Map[target.X + i, target.Y - j, 1].Color, run.colorFlashAoE);
@@ -1833,7 +1857,7 @@ namespace striveClasses
                                             if (run.Map.Map[target.X - i, target.Y - j, 1] is Sentient)
                                             {
                                                 run.Map.Map[target.X - i, target.Y - j, 1].Print(run, run.colorSelectedFore, run.colorFlashAoE);
-                                                ((Sentient)run.Map.Map[target.X - i, target.Y - j, 1]).TakeDamageWithoutFlashing((int)((double)dmg * ((GameMap.GetDistance(target.X - i, target.Y - j, target.X, target.Y) + 1) / (double)radius)), attacking, run);
+                                                ((Sentient)run.Map.Map[target.X - i, target.Y - j, 1]).TakeDamageWithoutFlashing((int)((double)dmg * ((double)radius) / (GameMap.GetDistance(target.X - i, target.Y - j, target.X, target.Y) + 5)), attacking, run);
                                             }
                                             else
                                                 run.Map.Map[target.X - i, target.Y - j, 1].Print(run, run.Map.Map[target.X - i, target.Y - j, 1].Color, run.colorFlashAoE);
@@ -1892,7 +1916,7 @@ namespace striveClasses
                                             if (run.Map.Map[target.X - i, target.Y + j, 1] is Sentient)
                                             {
                                                 run.Map.Map[target.X - i, target.Y + j, 1].Print(run, run.colorSelectedFore, run.colorFlashAoE);
-                                                ((Sentient)run.Map.Map[target.X - i, target.Y + j, 1]).TakeDamageWithoutFlashing((int)((double)dmg * ((GameMap.GetDistance(target.X - i, target.Y + j, target.X, target.Y) + 1) / (double)radius)), attacking, run);
+                                                ((Sentient)run.Map.Map[target.X - i, target.Y + j, 1]).TakeDamageWithoutFlashing((int)((double)dmg * ((double)radius) / (GameMap.GetDistance(target.X - i, target.Y + j, target.X, target.Y) + 5)), attacking, run);
                                             }
                                             else
                                                 run.Map.Map[target.X - i, target.Y + j, 1].Print(run, run.Map.Map[target.X - i, target.Y + j, 1].Color, run.colorFlashAoE);
@@ -1950,6 +1974,11 @@ namespace striveClasses
 
 
                 //3x more for loops for other quadrants
+        }
+
+        public void RetraceAoELERP(GameRun run, MapTile target, int radius, int dmg, Sentient attacking, string mode)
+        {
+            //implement 1234
         }
 
         public static float LinearERP(float start, float end, float t)
@@ -2328,6 +2357,11 @@ namespace striveClasses
 
         static public void UpdateWeapon(GameRun run, Weapon weapon, bool wasAoE)
         {
+            if (wasAoE && weapon.ModeNames[weapon.SelectedMode] != "AoE")
+            {
+                run.Map.Print(run);
+            }
+
             Console.SetCursorPosition(0, run.GetWidth() + 4);
             Console.Write("                                ");
             Console.SetCursorPosition(0, run.GetWidth() + 5);
@@ -2336,24 +2370,13 @@ namespace striveClasses
             Console.Write("                                ");
             Console.SetCursorPosition(0, run.GetWidth() + 4);
             Console.Write(weapon.Name + ": ");
-
-            if (wasAoE)
-            {
-                run.Map.Print(run);
-            }
-
+            
             if (weapon is RangedWeapon)
             {
                 UpdateAmmo(run, (RangedWeapon)weapon);
 
                 Console.SetCursorPosition(0, run.GetWidth() + 6);
                 Console.Write("Mode: " + weapon.ModeNames[weapon.SelectedMode]);
-
-                if (weapon.ModeNames[weapon.SelectedMode] == "AoE" && run.SelectedTarget != null)
-                {
-                    GameMap.RetraceAoE(run, run.SelectedTarget, run.Player.Selected.ModeAttacks[run.Player.Selected.SelectedMode], 0, run.Player, "draw");
-                }
-                
             }
             else if (weapon is MeleeWeapon)
             {
@@ -2542,12 +2565,10 @@ namespace striveClasses
                 run.Enemies.Sort();
 
                 run.Map.Print(run);
-
-                if (run.Player.Selected.ModeNames[run.Player.Selected.SelectedMode] == "AoE")
+                
+                if (run.Player.Selected.ModeNames[run.Player.Selected.SelectedMode] == "AoE" && run.SelectedTarget != null)
                 {
-                    if (run.SelectedTarget != null)
-                        GameMap.RetraceAoE(run, run.SelectedTarget, run.Player.Selected.ModeAttacks[run.Player.Selected.SelectedMode], 0, run.Player, "draw");
-
+                    GameMap.RetraceAoE(run, run.SelectedTarget, run.Player.Selected.ModeAttacks[run.Player.Selected.SelectedMode], 0, run.Player, "draw");
                 }
                 else if (run.LastAttacked != null && run.LastAttacked.HP > 0)
                 {
@@ -2556,7 +2577,9 @@ namespace striveClasses
                 else if (run.Enemies.Count > 0)
                 {
                     Enemy target = run.GetClosestEnemy();
-                    run.SelectEnemy(target);
+
+                    if(target.VisibleToPlayer)
+                        run.SelectEnemy(run.GetClosestEnemy());
                 }
             }
             
@@ -2778,10 +2801,8 @@ namespace striveClasses
             {
                 Enemy target = run.GetClosestEnemy();
 
-                if (run.Player.Selected.ModeNames[run.Player.Selected.SelectedMode] == "AoE")
-                    run.SelectTile(target);
-                else
-                    run.SelectEnemy(target);
+                if(target.VisibleToPlayer)
+                    run.SelectEnemy(run.GetClosestEnemy());
             }
 
             ConsoleKey key;
@@ -3179,7 +3200,14 @@ namespace striveClasses
                             }
                             Sentient.UpdateWeapon(run, run.Player.Selected, wasAoE);
                             
-                            if(wasAoE)
+                            if (run.Player.Selected.ModeNames[run.Player.Selected.SelectedMode] == "AoE" && (run.SelectedTarget != null || run.SelectedTile != null))
+                            {
+                                if (run.SelectedTarget != null)
+                                    GameMap.RetraceAoE(run, run.SelectedTarget, run.Player.Selected.ModeAttacks[run.Player.Selected.SelectedMode], 0, run.Player, "draw");
+                                else if (run.SelectedTile != null)
+                                    GameMap.RetraceAoE(run, run.SelectedTile, run.Player.Selected.ModeAttacks[run.Player.Selected.SelectedMode], 0, run.Player, "draw");
+                            }
+                            else if (wasAoE)
                             {
                                 if (run.SelectedTile != null)
                                     run.SelectTile(run.SelectedTile);
@@ -3202,12 +3230,14 @@ namespace striveClasses
                             run.Player.Selected = run.Player.WeaponInventory[0];
 
                             Sentient.UpdateWeapon(run, run.Player.Selected, wasAoE);
-
+                            
                             if (run.SelectedTile != null)
                                 run.SelectTile(run.SelectedTile);
                             else if(run.SelectedTarget != null)
+                            {
                                 run.SelectEnemy(run.SelectedTarget);
-                            else
+                            }
+                            else if(run.GetClosestEnemy().VisibleToPlayer)
                                 run.SelectEnemy(run.GetClosestEnemy());
                         }
                     }
@@ -3223,7 +3253,7 @@ namespace striveClasses
                             run.Player.Selected = run.Player.WeaponInventory[1];
 
                             Sentient.UpdateWeapon(run, run.Player.Selected, wasAoE);
-
+                            
                             if (run.SelectedTile != null)
                                 run.SelectTile(run.SelectedTile);
                             else if (run.SelectedTarget != null)
@@ -3244,7 +3274,7 @@ namespace striveClasses
                             run.Player.Selected = run.Player.WeaponInventory[2];
 
                             Sentient.UpdateWeapon(run, run.Player.Selected, wasAoE);
-
+                            
                             if (run.SelectedTile != null)
                                 run.SelectTile(run.SelectedTile);
                             else if (run.SelectedTarget != null)
@@ -3335,7 +3365,9 @@ namespace striveClasses
 
                 }
 
-                //run.UnselectTile();
+                //if (run.LastAttacked == null)
+                    //run.UnselectEnemy(run.SelectedTarget);
+                run.UnselectTile();
             }
         }
     }
