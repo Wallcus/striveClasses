@@ -1505,109 +1505,8 @@ namespace striveClasses
                     }
                 }
             }
-            
-                    /*
-                    for (int i = 0; i < Map.GetLength(0); i++)
-                    {
-                        for (int j = 0; j < Map.GetLength(1); j++)
-                        {
-                            //if in radius and if not out of bounds
-                            if (i > 0 && i < run.Map.Xlength && j > 0 && j < run.Map.Ylength && GameMap.GetDistance(i, j, run.Player) < run.visibility)
-                            {
-                                //check if it has more than 2 (3 or 4, not counting diagonal) visible squares next to it. If so, set to visible
-                                if (run.Map.Map[i, j, 0].VisibleToPlayer == false)
-                                {
-                                    int count = 0;
-
-                                    if (i + 1 > 0 && i + 1 < run.Map.Xlength && j > 0 && j < run.Map.Ylength)
-                                    {
-                                        if (run.Map.Map[i + 1, j, 0].VisibleToPlayer)
-                                        {
-                                            count++;
-                                        }
-                                    }
-                                    if (count <= 2 && i - 1 > 0 && i - 1 < run.Map.Xlength && j > 0 && j < run.Map.Ylength)
-                                    {
-                                        if (run.Map.Map[i - 1, j, 0].VisibleToPlayer)
-                                        {
-                                            count++;
-                                        }
-                                    }
-                                    if (count <= 2 && i > 0 && i < run.Map.Xlength && j + 1 > 0 && j + 1 < run.Map.Ylength)
-                                    {
-                                        if (run.Map.Map[i, j + 1, 0].VisibleToPlayer)
-                                        {
-                                            count++;
-                                        }
-                                    }
-                                    if (count <= 2 && i > 0 && i < run.Map.Xlength && j - 1 > 0 && j - 1 < run.Map.Ylength)
-                                    {
-                                        if (run.Map.Map[i, j - 1, 0].VisibleToPlayer)
-                                        {
-                                            count++;
-                                        }
-                                    }
-
-                                    bool corners = false;
-
-                                    //if visible neighbours == 2, check diagonal neighbours
-                                    if (count == 2)
-                                    {
-                                        corners = true;
-
-                                        if (i + 1 > 0 && i + 1 < run.Map.Xlength && j + 1 > 0 && j + 1 < run.Map.Ylength)
-                                        {
-                                            if (run.Map.Map[i + 1, j + 1, 0].VisibleToPlayer)
-                                            {
-                                                count++;
-                                            }
-                                        }
-                                        if (count < 4 && i - 1 > 0 && i - 1 < run.Map.Xlength && j + 1 > 0 && j + 1 < run.Map.Ylength)
-                                        {
-                                            if (run.Map.Map[i - 1, j + 1, 0].VisibleToPlayer)
-                                            {
-                                                count++;
-                                            }
-                                        }
-                                        if (count < 4 && i + 1 > 0 && i + 1 < run.Map.Xlength && j - 1 > 0 && j - 1 < run.Map.Ylength)
-                                        {
-                                            if (run.Map.Map[i + 1, j - 1, 0].VisibleToPlayer)
-                                            {
-                                                count++;
-                                            }
-                                        }
-                                        if (count < 4 && i - 1 > 0 && i - 1 < run.Map.Xlength && j - 1 > 0 && j - 1 < run.Map.Ylength)
-                                        {
-                                            if (run.Map.Map[i - 1, j - 1, 0].VisibleToPlayer)
-                                            {
-                                                count++;
-                                            }
-                                        }
-                                    }
-
-                                    if(count > 2 && corners == false)
-                                    {
-                                        run.Map.Map[i, j, 0].VisibleToPlayer = true;
-
-                                        if (run.Map.Map[i, j, 1] != null)
-                                        {
-                                            run.Map.Map[i, j, 1].VisibleToPlayer = true;
-                                        }
-                                    }
-                                    else if(count >= 5 && corners == true)
-                                    {
-                                        run.Map.Map[i, j, 0].VisibleToPlayer = true;
-
-                                        if (run.Map.Map[i, j, 1] != null)
-                                        {
-                                            run.Map.Map[i, j, 1].VisibleToPlayer = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }*/
-                }
+        }
+        
 
         public static void RetraceAoE_Depricated(GameRun run, MapTile target, int radius, int dmg, Sentient attacking, string mode)
         {
@@ -1981,7 +1880,7 @@ namespace striveClasses
 
                 //3x more for loops for other quadrants
         }
-
+        
         public static void RetraceAoE(GameRun run, MapTile target, int radius, int dmg, Sentient attacking, string mode)
         {
             //set all tile visibleToPlayer to false
@@ -3257,7 +3156,7 @@ namespace striveClasses
                                 if(validAction)
                                 {
                                     endingAction = true;
-                                    if (run.SelectedTarget.HP > 0)
+                                    if (run.SelectedTarget != null && run.SelectedTarget.HP > 0)
                                         run.LastAttacked = run.SelectedTarget;
                                 }
                             }
@@ -3590,10 +3489,17 @@ namespace striveClasses
                 {
                     run.Map.Remove(this, run);
 
+                    if(run.SelectedTarget == this)
+                    {
+                        run.UnselectEnemy(this);
+                        run.UnselectTile();
+                        run.LastAttacked = null;
+                    }
+
                     int index = run.Enemies.IndexOf((Enemy)this);
 
                     run.Enemies.RemoveAt(index);
-
+                    
                     run.Log(this.ToString() + " is dead");
 
                     run.Map.DropItemList(run, this.X, this.Y, this.ItemInventory);
@@ -3646,11 +3552,21 @@ namespace striveClasses
                 {
                     run.Map.Remove(this, run);
 
+                    if (run.SelectedTarget == this)
+                    {
+                        run.UnselectEnemy(this);
+                        run.UnselectTile();
+                        run.LastAttacked = null;
+                    }
+
                     int index = run.Enemies.IndexOf((Enemy)this);
 
                     run.Enemies.RemoveAt(index);
-
+                    
                     run.Log(this.ToString() + " is dead");
+
+                    run.Map.DropItemList(run, this.X, this.Y, this.ItemInventory);
+                    run.Map.DropItemList(run, this.X, this.Y, this.WeaponInventory);
 
                     run.Map.Map[this.X, this.Y, 0].Print(run);
                 }
