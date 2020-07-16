@@ -482,6 +482,11 @@ namespace striveClasses
             get; set;
         }
 
+        public bool VisibleToAoE
+        {
+            get; set;
+        }
+
         public string Name
         {
             get; set;
@@ -512,6 +517,7 @@ namespace striveClasses
             this.ColorB = back;
 
             this.VisibleToPlayer = false;
+            this.VisibleToAoE = false;
             this.SeenByPlayer = false;
         }
 
@@ -1307,7 +1313,7 @@ namespace striveClasses
                 }
             }
             
-            for(int i = 0; i < 360; i++)
+            for(int i = 0; i < 360; i+=3)
             {
                 //make line
                 float deg = i * Deg2rad();
@@ -1603,7 +1609,7 @@ namespace striveClasses
                     }*/
                 }
 
-        public static void RetraceAoE(GameRun run, MapTile target, int radius, int dmg, Sentient attacking, string mode)
+        public static void RetraceAoE_Depricated(GameRun run, MapTile target, int radius, int dmg, Sentient attacking, string mode)
         {
             //mode : "Draw"
             //mode : "Damage"
@@ -1976,9 +1982,115 @@ namespace striveClasses
                 //3x more for loops for other quadrants
         }
 
-        public void RetraceAoELERP(GameRun run, MapTile target, int radius, int dmg, Sentient attacking, string mode)
+        public static void RetraceAoE(GameRun run, MapTile target, int radius, int dmg, Sentient attacking, string mode)
         {
-            //implement 1234
+            //set all tile visibleToPlayer to false
+            for (int i = 0; i < run.Map.Map.GetLength(0); i++)
+            {
+                for (int j = 0; j < run.Map.Map.GetLength(1); j++)
+                {
+                    run.Map.Map[i, j, 0].VisibleToAoE = false;
+                }
+            }
+
+            for (int i = 0; i < 360; i+=4)
+            {
+                //make line
+                float deg = i * Deg2rad();
+                int nx = (int)Math.Round(Math.Cos(deg) * radius) + target.X;
+                int ny = (int)Math.Round(Math.Sin(deg) * radius) + target.Y;
+
+                int d = (int)GetDistance(nx, ny, target.X, target.Y);
+
+                //loop through all tiles
+                for (int j = 0; j <= d; j++)
+                {
+                    int tx = (int)Math.Round(LinearERP(target.X, nx, j / (float)d));
+                    int ty = (int)Math.Round(LinearERP(target.Y, ny, j / (float)d));
+
+                    if (tx < 0 || tx >= run.Map.Xlength)
+                        break;
+                    if (ty < 0 || ty >= run.Map.Ylength)
+                        break;
+
+                    if (run.Map.Map[tx, ty, 1] != null && run.Map.Map[tx, ty, 1] is MapWall)
+                    {
+                        break;
+                    }
+
+                    run.Map.Map[tx, ty, 0].VisibleToAoE = true;
+                }
+            }
+
+            bool inRange = GameMap.GetDistance(target.X, target.Y, attacking) < attacking.Selected.BaseRange;
+            
+            //damage should not be called if out of range, it is checked just in case
+            if(mode == "damage" && inRange)
+            {
+                for (int i = target.X - radius; i < target.X + radius; i++)
+                {
+                    for (int j = target.Y - radius; j < target.Y + radius; j++)
+                    {
+                        if ((GameMap.GetDistance(target.X, target.Y, i, j) < radius) && (i < run.Map.Xlength && i >= 0) && (j < run.Map.Ylength && j >= 0) && run.Map.Map[i, j, 0].VisibleToAoE) //is in bounds of map
+                        {
+                            if (run.Map.Map[i, j, 1] != null)
+                            {
+                                if (run.Map.Map[i, j, 1] is Sentient)
+                                {
+                                    run.Map.Map[i, j, 1].Print(run, run.colorSelectedFore, run.colorFlashAoE);
+                                    ((Sentient)run.Map.Map[i, j, 1]).TakeDamageWithoutFlashing((int)((double)dmg), attacking, run);
+                                }
+                                else
+                                    run.Map.Map[i, j, 1].Print(run, run.Map.Map[i, j, 1].Color, run.colorFlashAoE);
+                            }
+                            else
+                                run.Map.Map[i, j, 0].Print(run, run.colorFlashAoE, run.colorFlashAoE);
+                        }
+                    }
+                }
+
+                run.Map.Print(run);
+            }
+            else if(mode == "draw" && inRange)
+            {
+                for (int i = target.X - radius; i < target.X + radius; i++)
+                {
+                    for (int j = target.Y - radius; j < target.Y + radius; j++)
+                    {
+                        if ((GameMap.GetDistance(target.X, target.Y, i, j) < radius) && (i < run.Map.Xlength && i >= 0) && (j < run.Map.Ylength && j >= 0) && run.Map.Map[i, j, 0].VisibleToAoE)
+                        {
+                            if (run.Map.Map[i, j, 1] != null)
+                            {
+                                run.Map.Map[i, j, 1].Print(run, run.colorSelectedFore, run.colorSelectedBack);
+                            }
+                            else
+                            {
+                                run.Map.Map[i, j, 0].Print(run, run.colorSelectedBack, run.colorSelectedBack);
+                            }
+                        }
+                    }
+                }
+            }
+            else if(mode == "draw" && !inRange)
+            {
+                for (int i = target.X - radius; i < target.X + radius; i++)
+                {
+                    for (int j = target.Y - radius; j < target.Y + radius; j++)
+                    {
+                        if ((GameMap.GetDistance(target.X, target.Y, i, j) < radius) && (i < run.Map.Xlength && i >= 0) && (j < run.Map.Ylength && j >= 0) && run.Map.Map[i, j, 0].VisibleToAoE)
+                        {
+                            if (run.Map.Map[i, j, 1] != null)
+                            {
+                                run.Map.Map[i, j, 1].Print(run, run.colorSelectedBack, run.colorSelectedFore);
+                            }
+                            else
+                            {
+                                run.Map.Map[i, j, 0].Print(run, run.colorSelectedFore, run.colorSelectedFore);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public static float LinearERP(float start, float end, float t)
