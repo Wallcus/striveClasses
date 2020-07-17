@@ -1253,6 +1253,15 @@ namespace striveClasses
                         case '|': m.Map[i, j, 0] = new MapFloor(i, j, ' ', run.colorWall, colorB); m.Map[i, j, 1] = new MapWall(i, j, '|', run.colorWall, colorB); break;
                         case '@': m.Map[i, j, 0] = new MapFloor(i, j, ' ', run.colorWall, colorB); Player temp = new Player(run); temp.X = i; temp.Y = j; m.Map[i, j, 1] = temp; run.Player = temp;  break;
                         case 'E': m.Map[i, j, 0] = new MapFloor(i, j, ' ', run.colorWall, colorB); Enemy tempEnemy = new Enemy(i, j, run); m.Map[i, j, 1] = tempEnemy; run.Enemies.Add(tempEnemy); break;
+                        case 'e': m.Map[i, j, 0] = new MapFloor(i, j, ' ', run.colorWall, colorB);
+                                    List<Weapon> tempWeaponInv = new List<Weapon>();
+                                    tempWeaponInv.Add(new MeleeWeapon());
+                                    tempWeaponInv.Add(new RangedWeapon());
+                                    List<Item> tempInv = new List<Item>();
+                                    Ammo tempAmmo = new Ammo("Handgun ammo", 120, 10, 0);
+                                    tempInv.Add(tempAmmo);
+                                    tempEnemy = new Enemy(i, j, 50, 50, 0, 50, 3, 85, 25, false, 'e', tempWeaponInv, 1, tempInv, run); m.Map[i, j, 1] = tempEnemy; run.Enemies.Add(tempEnemy);
+                                    break;
                         case '#': m.Map[i, j, 0] = new FloorExit(i, j, run.colorWall, colorB); break;
                         case 'X':   if (m.Map[i, j - 1, 0] is MapWall)
                                     {
@@ -3396,18 +3405,24 @@ namespace striveClasses
             this.Selected = this.WeaponInventory[0];
         }
 
-        public Enemy(int x, int y, int hp, int hpMax, int energy, int energyMax, int speed, int accuracy, int dodge, bool grav, char type, GameRun run) : base(x, y, hp, hpMax, energy, energyMax, speed, accuracy, dodge, grav, type, run)
+        public Enemy(int x, int y, int hp, int hpMax, int energy, int energyMax, int speed, int accuracy, int dodge, bool grav, char type, Weapon selected, GameRun run) : base(x, y, hp, hpMax, energy, energyMax, speed, accuracy, dodge, grav, type, run)
         {
             this.Color = run.colorEnemy;
             this.ColorB = run.colorBackground1;
 
             this.WeaponInventory.Add(new MeleeWeapon());
-            this.Selected = this.WeaponInventory[0];
+            this.Selected = selected;
         }
 
-        public Enemy(int x, int y, int hp, int hpMax, int energy, int energyMax, int speed, int accuracy, int dodge, bool grav, char type, Weapon selected, GameRun run) : this(x, y, hp, hpMax, energy, energyMax, speed, accuracy, dodge, grav, type, run)
+        public Enemy(int x, int y, int hp, int hpMax, int energy, int energyMax, int speed, int accuracy, int dodge, bool grav, char type, List<Weapon> weaponInventory, int selected, List<Item> inventory, GameRun run) : base(x, y, hp, hpMax, energy, energyMax, speed, accuracy, dodge, grav, type, run)
         {
-            this.Selected = selected;
+            this.Color = run.colorEnemy;
+            this.ColorB = run.colorBackground1;
+
+            this.WeaponInventory = weaponInventory;
+            this.Selected = weaponInventory[selected];
+
+            this.ItemInventory = inventory;
         }
 
         public Enemy(int x, int y, GameRun run) : base(run)
@@ -3502,8 +3517,8 @@ namespace striveClasses
                     
                     run.Log(this.ToString() + " is dead");
 
-                    run.Map.DropItemList(run, this.X, this.Y, this.ItemInventory);
                     run.Map.DropItemList(run, this.X, this.Y, this.WeaponInventory);
+                    run.Map.DropItemList(run, this.X, this.Y, this.ItemInventory);
 
                     run.Map.Map[this.X, this.Y, 0].Print(run);
                 }
@@ -3564,9 +3579,9 @@ namespace striveClasses
                     run.Enemies.RemoveAt(index);
                     
                     run.Log(this.ToString() + " is dead");
-
-                    run.Map.DropItemList(run, this.X, this.Y, this.ItemInventory);
+                    
                     run.Map.DropItemList(run, this.X, this.Y, this.WeaponInventory);
+                    run.Map.DropItemList(run, this.X, this.Y, this.ItemInventory);
 
                     run.Map.Map[this.X, this.Y, 0].Print(run);
                 }
@@ -3663,7 +3678,7 @@ namespace striveClasses
                     int[,] tempPath = new int[1, 2];
 
                     int temp = 0;
-                    if (path.GetLength(0) < this.Speed)
+                    if (path.GetLength(0) > this.Speed)
                         temp = this.Speed;
                     else
                         temp = path.GetLength(0);
